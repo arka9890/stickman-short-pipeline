@@ -1,0 +1,13 @@
+# node / build
+node_modules/
+out/
+whisper.cpp/
+kokoro/
+public/audio/
+public/assets/
+src/captions/
+stills/
+*.16k.wav
+ebur.txt
+.metadata
+.DS_Store
