@@ -40,6 +40,10 @@ commands, pitfalls, and QC checklist before starting a production. Use
   `scripts/keyword_autocomplete.mjs`. If web search is unavailable, pageviews +
   yt-dlp still work offline of search APIs. No hunch picks.
 - Default VO engine: Kokoro-82M ONNX (voices-v1.0.bin + kokoro-v1.0.onnx) for every pipeline; Piper is fallback only.
+- Stills engine: gflow-cli. Every still is generated with gflow-cli text-to-image
+  (`gflow image t2i <prompt> --aspect 9:16`, driven by `scripts/generate-stills.mjs`
+  via `GFLOW_CLI_OUTPUT_DIR`). Verify `gflow --version` is on PATH before Gate 2;
+  if missing, stop and tell the user — never silently fall back to another generator.
 - Gate 2 (IMAGES): after generating each still, show it to the user one by one
   with a one-line note of what it should depict; regenerate any the user
   rejects before moving on. After three consecutive approvals, you may continue
@@ -86,7 +90,8 @@ commands, pitfalls, and QC checklist before starting a production. Use
   short ≤0.4 s decay for a clean loop), then render + master.
 
 ## Machine defaults
-- Default VO: Kokoro-82M ONNX (kokoro-v1.0.onnx + oices-v1.0.bin, voice m_michael).
+- Default VO: Kokoro-82M ONNX (kokoro-v1.0.onnx + voices-v1.0.bin, voice am_michael).
+- Default stills: gflow-cli (`gflow image t2i`, 9:16) via `scripts/generate-stills.mjs`; 12 stills = 6 segments x 2 scenes.
 - Default BGM: generate a new topic-fit bed (never reuse old). BGM approval gate:
   3 sample beds themed to the story topic/mood must be attached for the user to
   pick; final render only after explicit approval. Full-length version: exact video

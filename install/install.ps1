@@ -43,12 +43,24 @@ if (-not (Test-Cmd yt-dlp)) {
   $env:Path = [System.Environment]::GetEnvironmentVariable('Path','Machine') + ';' + [System.Environment]::GetEnvironmentVariable('Path','User')
 } else { Write-Host "ok: yt-dlp $((yt-dlp --version))" }
 
-# ---- 5. Python deps for Kokoro TTS + BGM/SFX synths ----
+# ---- 5. uv + gflow-cli (stills engine) ----
+Step "uv + gflow-cli (stills engine)"
+if (-not (Test-Cmd uv)) {
+  winget install --id astral-sh.uv --silent --accept-source-agreements --accept-package-agreements
+  $env:Path = [System.Environment]::GetEnvironmentVariable('Path','Machine') + ';' + [System.Environment]::GetEnvironmentVariable('Path','User')
+} else { Write-Host "ok: uv $((uv --version))" }
+if (-not (Test-Cmd gflow)) {
+  uv tool install gflow-cli
+  $env:Path = [System.Environment]::GetEnvironmentVariable('Path','Machine') + ';' + [System.Environment]::GetEnvironmentVariable('Path','User')
+  $env:Path = $env:Path + ';' + (Join-Path $env:USERPROFILE '.local\bin')
+} else { Write-Host "ok: gflow $((gflow --version))" }
+
+# ---- 6. Python deps for Kokoro TTS + BGM/SFX synths ----
 Step "Python packages (kokoro-onnx, onnxruntime, numpy, soundfile, espeak-ng data loader)"
 python -m pip install --quiet --upgrade kokoro-onnx espeakng-loader phonemizer-fork onnxruntime numpy soundfile
 if ($LASTEXITCODE -ne 0) { Write-Warning "pip install failed — retry manually: python -m pip install kokoro-onnx espeakng-loader phonemizer-fork onnxruntime numpy soundfile" }
 
-# ---- 6. Kokoro model files (project-local, ~350 MB total, cached) ----
+# ---- 7. Kokoro model files (project-local, ~350 MB total, cached) ----
 Step "Kokoro-82M ONNX model + voices (download ~350 MB if missing)"
 $kokoroDir = Join-Path $env:USERPROFILE 'kokoro-models'
 New-Item -ItemType Directory -Force -Path $kokoroDir | Out-Null
@@ -68,7 +80,7 @@ NOTE: for each new video project folder:
 (the project-template README covers this)
 "@
 
-# ---------- 7. Project template deps + whisper.cpp ----------
+# ---------- 8. Project template deps + whisper.cpp ----------
 Step "Project template: npm install + whisper.cpp (medium.en)"
 $template = Join-Path $repoRoot 'project-template'
 Push-Location $template
@@ -82,7 +94,7 @@ copy the whole project-template folder (or just re-run:
 inside the new project folder).
 "@
 
-# ---- 8. Verify ----
+# ---- 9. Verify ----
 Step "Verification"
 $checks = @(
   @{ n='npm';    v={ npm --version } },
@@ -90,7 +102,8 @@ $checks = @(
   @{ n='ffmpeg'; v={ (ffmpeg -Version | Select-Object -First 1) -replace '.*ffmpeg version ([\d.]+).*','$1' } },
   @{ n='yt-dlp'; v={ yt-dlp --version } },
   @{ n='kokoro model';  v={ '{0:N0} MB' -f ((Get-Item $model).Length / 1MB) } },
-  @{ n='kokoro voices'; v={ '{0:N0} MB' -f ((Get-Item $voices).Length / 1MB) } }
+  @{ n='kokoro voices'; v={ '{0:N0} MB' -f ((Get-Item $voices).Length / 1MB) } },
+  @{ n='gflow-cli'; v={ (gflow --version) } }
 )
 $fail = $false
 foreach ($c in $checks) {

@@ -44,6 +44,8 @@ The installer checks and installs:
 | ffmpeg | trim/mix/master/loudness measure | winget |
 | yt-dlp | competitor research (`ytsearch8:`) | winget |
 | whisper.cpp + medium.en model | guaranteed-sync captions | @remotion/install-whisper-cpp |
+| uv (astral) | installs/updates gflow-cli tool | winget (astral-sh.uv) |
+| gflow-cli (>= 0.92) | still image generation (12 stil per video, `gflow image t2i` 9:16) | uv (`uv tool install gflow-cli`) |
 | Remotion deps | `project-template/` npm install | npm |
 
 **macOS/Linux:** same components, install with brew/apt instead; the project

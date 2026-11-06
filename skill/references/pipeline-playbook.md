@@ -51,7 +51,7 @@ node scripts/keyword_autocomplete.mjs "seed phrase 1" "seed phrase 2" ...
 ## Phase 2 — Script + VO
 - Hook-first (loop callback): before drafting vo.txt, send the USER a list of 3-5 hook options. Each option pairs (a) an opening hook line and (b) a closing line that calls back to that hook. Wait for approval, then write the full 6-segment script where seg1 carries the hook and the final segment closes with the matching callback.
 - Script format `SegN::text` in `stills/vo.txt` (5–7 segments, each 5–8s).
-- Default VO engine: Kokoro-82M ONNX (kokoro-v1.0.onnx + oices-v1.0.bin); Piper fallback only.
+- Default VO engine: Kokoro-82M ONNX (kokoro-v1.0.onnx + voices-v1.0.bin); Piper fallback only.
    en_US-ryan-high.onnx) for English; Kokoro-82M ONNX (`kokoro-v1.0.onnx`
    + `voices-v1.0.bin`) installed and usable as fallback.
 - Local TTS: Kokoro-82M ONNX (`kokoro-v1.0.onnx` + `voices-v1.0.bin`). Pick 3–5
@@ -60,6 +60,18 @@ node scripts/keyword_autocomplete.mjs "seed phrase 1" "seed phrase 2" ...
   has the deps; `pip` and `python` may belong to different versions.
 - Voice generator: synth → trim leading/trailing silence → write WAV.
 - Normalize each VO segment to -16 LUFS before mixing.
+
+## Phase 2.5 - Stills (gflow-cli)
+- Engine: gflow-cli text-to-image. `scripts/generate-stills.mjs` calls
+  `gflow image t2i <prompt> --aspect 9:16` with `GFLOW_CLI_OUTPUT_DIR=public/assets`
+  and writes a `_DONE` marker per shot id, so re-runs skip finished stills.
+- Prompts live in `stills/prompts.mjs`: anchor style + era + cast + per-shot image
+  + tail. One per-segment filter arg (`node scripts/generate-stills.mjs seg3`)
+  generates a single segment's two scenes.
+- Verify `gflow --version` (0.92+) is on PATH BEFORE generating; if missing, stop
+  and tell the user. Do not fall back to other image generators silently.
+- Gate 2 applies here: show each still one by one until three consecutive
+  approvals; after that the rest may be batch-generated with the same A5 QA check.
 
 ## Phase 3 — Timeline + captions
 - Slot timing per segment (not fixed): LEAD ~0.3–0.4s before audio starts
