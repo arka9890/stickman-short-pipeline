@@ -22,6 +22,7 @@ commands, pitfalls, and QC checklist before starting a production. Use
 `scripts/keyword_autocomplete.mjs` for the SEO phase.
 
 ## Hard rules
+- Hard rule — FOLLOW THE PIPELINE (NO SKIPPING): every run must execute the steps in order (topic research → Gate 1 idea pick → Gate 2 still approval → Gate 3 BGM pick → final render approval). Never freelance a substitute, shortcut, or skipped gate — not even "temporarily" (no placeholder BGM, no unapproved stills, no render without user approval). If a step fails or is unavailable, stop and tell the user what is needed; any deviation requires explicit user approval before work continues.
 - Hook-first: before writing stills/vo.txt, send the USER 3-5 hook options. Each option pairs an opening hook line and a closing line that calls back to that hook (loop). Wait for approval, then write full script + VO.
 - Editing style baseline (reference: current Salem video): hard cuts between scenes; kinetic TikTok captions with gold per-word highlight; per-scene keyword overlay at the cut; BGM under VO ~-23 LUFS with ducking (0.4 speaking / 0.55 gap); SFX hits on cuts; end card anchored to scene end.
 - Length: final timeline MUST be ≤ 60.0 s (≤ 1800 frames at 30 fps), measured
