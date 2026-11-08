@@ -71,6 +71,12 @@ DIVERSITY RULE (mandatory): every cast card must be visually distinct (hair + co
   landing on the first caption, followed by a rising tension swell into the first
   mid-hook cut (~2-3 s). Rebuild per topic; never reuse the previous video's hook
   package.
+- Hook bombast - first 1-5 s must be "MORE WAH": frame 0 opens on a wide cinematic
+  establishing still (scale, weather/light, silhouettes); frame ~2-3 s tight
+  POV/character reaction. Pair with the fresh grab SFX (sub-boom + braam + metal
+  ping + riser) and a rising tension swell. No flat/generic opening stills. Iterate
+  regens until the user accepts the hook as striking. Optional red overlay title only if
+  it serves the hook and passes the size check.
 - Effects: use Concat MCP library filters/transitions for special video effects
   when needed; keep transitions <= 0.4s. Prefer these over custom ad hoc CSS.
 
