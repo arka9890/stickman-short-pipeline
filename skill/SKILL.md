@@ -15,7 +15,7 @@ example-prompt: >
 
 # Stickman Short Pipeline (local, licensed assets)
 
-Intended outcome: one finished 9:16 MP4 (30–60 s, hard cap 60 s, -14 LUFS, true peak ≤ -1.0
+Intended outcome: one finished 9:16 MP4 (30–40 s, hard cap 40 s, -14 LUFS, true peak ≤ -1.0
 dBFS) plus upload-ready metadata, built entirely locally with licensed/CC0
 assets. Read `references/pipeline-playbook.md` for the full step-by-step
 commands, pitfalls, and QC checklist before starting a production. Use
@@ -25,10 +25,11 @@ commands, pitfalls, and QC checklist before starting a production. Use
 - Hard rule — FOLLOW THE PIPELINE (NO SKIPPING): every run must execute the steps in order (topic research → Gate 1 idea pick → Gate 2 still approval → Gate 3 BGM pick → final render approval). Never freelance a substitute, shortcut, or skipped gate — not even "temporarily" (no placeholder BGM, no unapproved stills, no render without user approval). If a step fails or is unavailable, stop and tell the user what is needed; any deviation requires explicit user approval before work continues.
 - Hook-first: before writing stills/vo.txt, send the USER 3-5 hook options. Each option pairs an opening hook line and a closing line that calls back to that hook (loop). Wait for approval, then write full script + VO.
 - Editing style baseline (reference: current Salem video): hard cuts between scenes; kinetic TikTok captions with gold per-word highlight; per-scene keyword overlay at the cut; BGM under VO ~-23 LUFS with ducking (0.4 speaking / 0.55 gap); SFX hits on cuts; end card anchored to scene end.
-- Length: final timeline MUST be ≤ 60.0 s (≤ 1800 frames at 30 fps), measured
+- Length: final timeline MUST be ≤ 40.0 s (≤ 1200 frames at 30 fps), measured
   from the rendered file, not estimated. Build the timeline with the cap
   enforced in `scripts/make-timeline.mjs`; if it overflows, cut script words —
   never compress the end card below 2.5 s.
+- Retention pacing (YouTube Studio data 2026): 0–1s = visual+title hook menonjol agar swipe berkurang; 5–15s = anti-dead-air, sambung poin utama tanpa jeda narasi panjang. Target VO ~90 kata maks (asumsi 130 wpm) untuk 40s, gap LEAD 0.3–0.4s / TAIL 0.5–0.7s.
 - Gate 1 (IDEA): before any production work, present a short list of content
   ideas (topic, hook angle, why it fits the channel) and wait for the user to
   pick one. Never pick the topic for them.

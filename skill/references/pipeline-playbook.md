@@ -78,7 +78,7 @@ node scripts/keyword_autocomplete.mjs "seed phrase 1" "seed phrase 2" ...
   (image lands slightly before narration), TAIL ~0.5–0.7s after audio ends,
   END_HOLD ~2.5–3.2s for the end card. Keep total dead air per scene under
   ~1.2s so audience retention doesn't drop.
-- Total length is capped at 60.0 s / 1800 frames @30fps. Put the cap in
+- Total length is capped at 40.0 s / 1200 frames @30fps. Put the cap in
   `make-timeline.mjs` (e.g. shrink END_HOLD, then throw if the sum still
   overflows) and cut script words instead of squeezing the end card. Verify
   with `ffprobe -show_entries format=duration` on the rendered file.
