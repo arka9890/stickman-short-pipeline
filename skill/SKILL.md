@@ -107,6 +107,9 @@ DIVERSITY RULE (mandatory): every cast card must be visually distinct (hair + co
 - Place whoosh/impact SFX 2–4 frames before every visual cut; place an end-card impact at the end-card start.
 - BGM volume duck points must be strictly monotonically increasing frames: keep a gap between each segment's audioEnd+ENT and the next segment's audioStart−ENT so interpolate does not crash on overlapping input ranges.
 - Schedule images with a `from` that is relative to the parent Sequence. An absolute `from` inside an already-offset parent double-offsets the image and leaves most of that segment black.
+- Repair captions against the VO script, not token by token: whisper splits words ("Ptolemies" → "P"+"to"+"lem"+"ies", "500,000" → "500,"+"000") and invents lines that were never spoken. Run `scripts/fix-captions-vs-script.mjs`, which matches caption tokens against the words in `stills/vo.txt`, merges fragments into one word, restores the leading space on every token but the first, and drops tokens left over after the script words run out.
+- Compare British and American spellings when aligning (harbour/harbor), otherwise a correct caption looks broken and gets "repaired" into the wrong word.
+- Re-read the caption JSON after aligning and before rendering; words that render glued together or spelled wrong are not caught by the caption count.
 
 ## Still verification (mandatory before and after render)
 - Before rendering, list every still the timeline references and confirm each file exists on disk with a non-trivial size; a still that was generated but never copied into the public assets folder renders as a missing image.
@@ -117,6 +120,9 @@ DIVERSITY RULE (mandatory): every cast card must be visually distinct (hair + co
 - Shorts thumbnails are vertical: generate with `gflow image t2i "<prompt>" --aspect 9:16` (never 16:9), and finish at 1080×1920.
 - Produce 3 distinct angle variants (e.g. wide blast, lone witness, graphic top-down), attach all 3, and let the user pick the artwork before adding text.
 - Write the headline with ffmpeg `drawtext` (Arial Black, thick black border, drop shadow) — the image model cannot render clean type. Render 2–3 wording variants on the chosen artwork and let the user pick the wording.
+- Fit the headline to the frame before rendering: measure the real font width (PIL `ImageFont.getbbox`) and shrink the size until the longest line fits inside ~900 px of the 1080 px width, with `scripts/add-thumb-text-fit.mjs`. A fixed font size pushes long words off both sides of the frame.
+- After rendering the thumbnail, read the image and confirm every headline line sits inside the frame; a line clipped at the edge is not acceptable even when the file was produced without an error.
+- If gflow times out or fails on a thumbnail variant, keep going with the artwork that succeeded and offer 2 artworks x 2 wordings instead of blocking the deliverable.
 - Keep the upper third of the artwork dark and empty so the headline has room, and check the rendered thumbnail visually before delivering.
 - Deliver as `<project>/thumbnails/<topic>_thumbnail.jpg` next to the final MP4.
 
