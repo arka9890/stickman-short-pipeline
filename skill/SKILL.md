@@ -107,7 +107,8 @@ DIVERSITY RULE (mandatory): every cast card must be visually distinct (hair + co
 - Place whoosh/impact SFX 2–4 frames before every visual cut; place an end-card impact at the end-card start.
 - BGM volume duck points must be strictly monotonically increasing frames: keep a gap between each segment's audioEnd+ENT and the next segment's audioStart−ENT so interpolate does not crash on overlapping input ranges.
 - Schedule images with a `from` that is relative to the parent Sequence. An absolute `from` inside an already-offset parent double-offsets the image and leaves most of that segment black.
-- Repair captions against the VO script, not token by token: whisper splits words ("Ptolemies" → "P"+"to"+"lem"+"ies", "500,000" → "500,"+"000") and invents lines that were never spoken. Run `scripts/fix-captions-vs-script.mjs`, which matches caption tokens against the words in `stills/vo.txt`, merges fragments into one word, restores the leading space on every token but the first, and drops tokens left over after the script words run out.
+- Repair captions against the VO script, not token by token: whisper splits words ("Ptolemies" → "P"+"to"+"lem"+"ies", "500,000" → "500,"+"000", "forgery" → "for"+"gery") and invents lines that were never spoken. Run `scripts/fix-captions-vs-script.mjs`, which matches caption tokens against the words in `stills/vo.txt`, merges fragments into one word, restores the leading space on every token but the first, and drops tokens left over after the script words run out.
+- The caption aligner uses fuzzy (Levenshtein) Needleman-Wunsch alignment, not exact matching: fast TTS makes whisper mishear whole words ("explained" → "explain", "worked" → "works") and silently drop the last words of a segment ("You decide." vanished on seg6). A script word with no good transcript match keeps its place and gets timestamps interpolated between the nearest matched neighbours, so the on-screen text always equals the script. A strict exact-match aligner leaves the wrong word on screen.
 - Compare British and American spellings when aligning (harbour/harbor), otherwise a correct caption looks broken and gets "repaired" into the wrong word.
 - Re-read the caption JSON after aligning and before rendering; words that render glued together or spelled wrong are not caught by the caption count.
 
@@ -115,6 +116,8 @@ DIVERSITY RULE (mandatory): every cast card must be visually distinct (hair + co
 - Before rendering, list every still the timeline references and confirm each file exists on disk with a non-trivial size; a still that was generated but never copied into the public assets folder renders as a missing image.
 - After rendering, sample frames across the whole timeline into one contact sheet (`ffmpeg -i out/<name>.mp4 -vf "fps=1/4,scale=270:-1,tile=4x3" -frames:v 1 grid.jpg`) and read that image to confirm every segment shows its artwork; an unexpectedly small output file for a still-heavy render is a fast signal that images are missing.
 - If a sampled frame is blank or missing artwork, regenerate only that segment's still, copy it into the public assets folder, and re-render; do not rebuild the parts that already verified clean.
+- gflow sometimes renders a shot as a multi-panel comic strip instead of a single scene (seen on the final museum shot of the Voynich cut). Reject it and regenerate with explicit wording: "SINGLE continuous cinematic wide shot, one single scene, NOT a comic strip, NO panels, NO borders, NO frames, NO split layout".
+- Check the contact sheet for off-topic frames too: a still can look fine but depict the wrong moment (e.g. a lab bench instead of the dating instrument) and still pass a pure blank-frame check.
 
 ## Thumbnail (mandatory deliverable alongside the video)
 - Shorts thumbnails are vertical: generate with `gflow image t2i "<prompt>" --aspect 9:16` (never 16:9), and finish at 1080×1920.
@@ -125,6 +128,8 @@ DIVERSITY RULE (mandatory): every cast card must be visually distinct (hair + co
 - If gflow times out or fails on a thumbnail variant, keep going with the artwork that succeeded and offer 2 artworks x 2 wordings instead of blocking the deliverable.
 - Keep the upper third of the artwork dark and empty so the headline has room, and check the rendered thumbnail visually before delivering.
 - Deliver as `<project>/thumbnails/<topic>_thumbnail.jpg` next to the final MP4.
+- gflow writes thumbnails into `<out>/images/<date>/<uuid>_1.jpg`, not as `thumb_a.jpg`. Rename or copy them to `thumb_a/b/c.jpg` before adding text, otherwise the text script has no input file.
+- Writing a WAV by hand (RIFF header assembled from `numpy` byte strings) produces a file the Remotion bundler rejects with `no 'data' tag found` and the render dies at frame 1. Always write audio with Python's `wave` module, and probe the result (`ffprobe -show_entries format=duration`) before rendering.
 
 ## Machine defaults
 - Default VO: Kokoro-82M ONNX (kokoro-v1.0.onnx + voices-v1.0.bin, voice am_michael).
