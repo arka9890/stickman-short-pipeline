@@ -52,7 +52,7 @@ head = int(0.05 * SR)
 out[:head] *= np.linspace(0, 1, head)
 
 peak = np.max(np.abs(out)) + 1e-9
-out = 0.8 * out / peak
+out = 0.55 * out / peak
 pcm = (np.clip(out, -1, 1) * 32767).astype(np.int16)
 
 path = os.path.join(ROOT, "public", "audio", "bgm_mystery.wav")
