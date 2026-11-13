@@ -100,14 +100,28 @@ DIVERSITY RULE (mandatory): every cast card must be visually distinct (hair + co
   full-length BGM in that style (exact video duration, no long outro — end with a
   short ≤0.4 s decay for a clean loop), then render + master.
 
+## BGM and VO balance (mandatory before and after render)
+Run this every time the user says the music buries the voice. A duck value alone does not prove the balance, so measure it.
+1. Read the target: the bed must sit 4-6 dB BELOW the voice while the voice speaks. The bed may be louder in the gaps; that is the point of the duck.
+2. Set the bed level when building the full-length track: normalize to ~0.55 peak in the generator (`scripts/bgm_full.py`), because a bed normalized to 0.8 peak lands near -14 dBFS RMS and reaches the mix louder than the voice.
+3. Set the duck in the composition to ~0.24 while speaking and ~0.36 in the gaps (`SPEAK` / `GAP` constants). Keep the duck points strictly monotonically increasing frames.
+4. Measure the rendered file on two windows — one inside speech, one inside a gap:
+```
+ffmpeg -ss <speech start> -t <dur> -i out/<name>.mp4 -af "astats=metadata=1:reset=0,ametadata=print:key=lavfi.astats.Overall.RMS_level" -f null -
+```
+   Read `lavfi.astats.Overall.RMS_level` from the last line of each run.
+5. Decide: the gap window must be quieter than the speech window. If the gap is as loud as or louder than the speech, the bed is still too hot — lower the bed peak and re-render. If the speech window reads louder than the voice alone, the voice is buried.
+6. Pick the gap window from the timeline, not by guessing seconds: read `src/timeline.json` and pick a range that falls between two segments' `audioFrom`/`audioFrom+audioDur`, because a window that still overlaps a voice segment measures speech, not the bed.
+7. Report the before/after numbers to the user so they can ask for more reduction without another blind pass.
+- Measure the balance on the rendered file, not on the sources: the mix is what the user hears, and per-source RMS does not reveal a bed that overpowers the voice.
+- Write the WAV with Python's `wave` module and probe it before rendering; a hand-assembled RIFF header is rejected by the Remotion bundler with `no 'data' tag found` and the render dies at the first frame.
+
 ## Caption and SFX embedding (mandatory before render)
 - Embed captions via `@remotion/captions` `createTikTokStyleCaptions` inside the composition: merge whisper subwords into whole words, paginate by `combineTokensWithinMilliseconds` (≤900ms), render each page as a Sequence from its startMs to the next page's startMs or the 900ms cap, with gold per-word highlight on the active token and dimmed inactive tokens.
 - Every caption must stay on screen ≥1.5s; if a paginated page is shorter, extend to the next page boundary or merge with the following caption.
 - Place the hook SFX (sub-boom + braam + metal ping + riser) at frame 0 and a rising tension swell into the first mid-hook cut (~2–3s).
 - Place whoosh/impact SFX 2–4 frames before every visual cut; place an end-card impact at the end-card start.
 - BGM volume duck points must be strictly monotonically increasing frames: keep a gap between each segment's audioEnd+ENT and the next segment's audioStart−ENT so interpolate does not crash on overlapping input ranges.
-- Measure the VO/BGM balance instead of guessing. A synthesized BGM bed normalized to 0.8 peak has an RMS around -14 dBFS, while Kokoro VO sits near -25 dBFS RMS. With a duck of 0.4 the bed lands near -22 dB — louder than the voice, so the BGM masks the VO even though "the duck is applied". Target: during speech the bed must sit 4-6 dB BELOW the voice RMS (roughly -30 dBFS), which means normalizing the bed to ~0.55 peak and ducking to ~0.24 (speech) / ~0.36 (gap).
-- Verify the balance on the rendered file, not on the source: `ffmpeg -ss <speech window> -t <dur> -i out/x.mp4 -af astats=metadata=1:reset=0,ametadata=print:key=lavfi.astats.Overall.RMS_level -f null -` on a speech window and on a gap window. If the gap window is as loud as or louder than the speech window, the bed is too hot.
 - Schedule images with a `from` that is relative to the parent Sequence. An absolute `from` inside an already-offset parent double-offsets the image and leaves most of that segment black.
 - Repair captions against the VO script, not token by token: whisper splits words ("Ptolemies" → "P"+"to"+"lem"+"ies", "500,000" → "500,"+"000", "forgery" → "for"+"gery") and invents lines that were never spoken. Run `scripts/fix-captions-vs-script.mjs`, which matches caption tokens against the words in `stills/vo.txt`, merges fragments into one word, restores the leading space on every token but the first, and drops tokens left over after the script words run out.
 - The caption aligner uses fuzzy (Levenshtein) Needleman-Wunsch alignment, not exact matching: fast TTS makes whisper mishear whole words ("explained" → "explain", "worked" → "works") and silently drop the last words of a segment ("You decide." vanished on seg6). A script word with no good transcript match keeps its place and gets timestamps interpolated between the nearest matched neighbours, so the on-screen text always equals the script. A strict exact-match aligner leaves the wrong word on screen.

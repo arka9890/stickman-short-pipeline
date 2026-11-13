@@ -109,9 +109,32 @@ ffmpeg -i out/video.mp4 -af ebur128=peak=true -f null NUL 2> ebur.txt
    (it is iterative) and measure again. Wrong-number sessions we saw:
    -14.8 (out of tolerance) fixed by one more pass → -14.4.
 
-## Phase 5.5 — BGM theme fit
+## Phase 5.5 — BGM theme fit + VO/bed balance
 Choose BGM by topic/era (research); never reuse old BGM without explicit fit check.
 Choose a BGM theme that matches the video's era/topic — e.g., Mesopotamian flute/lyre for Babylon, not a generic music-box from a previous video. Duck curve: music sits ~21 dB under the -16 LUFS voice while someone speaks, and 8 dB louder in speech gaps, with a 0.3 s attack/release so it never ducks audibly hard.
+
+### Measuring the VO/bed balance (do this whenever the voice is reported as buried)
+The duck value is not evidence; the rendered mix is. Target: the bed sits 4-6 dB BELOW the voice while the voice speaks, and may be louder in the gaps.
+
+1. Build the full-length bed with `scripts/bgm_full.py`, normalizing to ~0.55 peak.
+   A bed normalized to 0.8 peak measures near -14 dBFS RMS and ends up louder
+   than the voice in the mix.
+2. Set the duck in the composition: `SPEAK = 0.24` (while speaking),
+   `GAP = 0.36` (in the gaps). Keep duck points strictly monotonic.
+3. Render, then measure two windows on the OUTPUT file:
+```
+ffmpeg -ss <start> -t <dur> -i out/<name>.mp4 -af "astats=metadata=1:reset=0,ametadata=print:key=lavfi.astats.Overall.RMS_level" -f null -
+```
+   Take the last `lavfi.astats.Overall.RMS_level` value of each run.
+4. Choose the windows from `src/timeline.json`: a speech window inside one
+   segment's `audioFrom`/`audioFrom+audioDur`, a gap window that falls between
+   two segments. A window that overlaps a voice segment measures speech and
+   gives a false reading.
+5. Accept when the gap window is QUIETER than the speech window. If the gap is
+   as loud as or louder, the bed is still too hot: lower the bed peak, re-render,
+   measure again.
+6. Report the before/after numbers to the user so they can ask for more or less
+   reduction without another blind pass.
 
 ## Phase 6 — Visual QC + deliver
 Extract stills and LOOK at them (multimodal read), covering:
